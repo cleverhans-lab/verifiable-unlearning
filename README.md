@@ -10,7 +10,7 @@ We implemented our framework based on [ZoKrates](https://zokrates.github.io) (Ve
 
 ```
 git clone git@github.com:cleverhans-lab/verifiable-unlearning.git ~/verifiable-unlearning
-docker build -t verifiable-unlearning .
+cd ~/verifiable-unlearning; docker build -t verifiable-unlearning .
 ```
 
 ## Experiments
