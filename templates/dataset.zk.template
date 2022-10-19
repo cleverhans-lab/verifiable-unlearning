@@ -1,0 +1,99 @@
+import "hashes/pedersen/512bitBool" as hash_bits;
+import "hashes/pedersen/512bit" as hash;
+import "utils/casts/field_to_u32";
+import "utils/casts/bool_256_to_u32_8" as bool_to_u32;
+import "hashes/utils/256bitsDirectionHelper" as multiplex;
+
+import "utils/casts/u64_to_bits" as u64_to_bits;
+import "utils/casts/u32_from_bits" as u32_from_bits;
+
+const u32 NO_SAMPLES_D = {{no_samples_D}};
+const u32 NO_SAMPLES_U_PREV = {{no_samples_U_prev}};
+const u32 NO_SAMPLES_U_PLUS = {{no_samples_D_plus}};
+const u32 MAX_DEPTH_D = {{max_depth_D}};
+
+def hash_int(u64 x) -> u32[8] {
+    u32[16] mut preimage = [0; 16];
+    preimage[14] = u32_from_bits(u64_to_bits(x)[0..32]);
+    preimage[15] = u32_from_bits(u64_to_bits(x)[32..64]);
+    return hash(preimage);
+}
+
+def hash_digest(u32[8] lhs, u32[8] rhs) -> u32[8] {
+    u32[16] preimage = [...lhs, ...rhs];
+    return hash(preimage);
+}
+
+def is_equal(u32[8] a, u32[8] b) -> bool {
+	return a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3] && a[4] == b[4] && a[5] == b[5] && a[6] == b[6] && a[7] == b[7];
+}
+
+def is_smaller(u32[8] a, u32[8] b) -> bool {
+    u32 mut equal_until_idx = -1;
+    for u32 i in 0..8 {
+        equal_until_idx = if (a[i] == b[i]) && (equal_until_idx == i-1) { i } else { equal_until_idx }; 
+    }
+    u32 compare_idx = (equal_until_idx+1) % 8;
+    return a[compare_idx] < b[compare_idx];
+}
+
+def is_larger(u32[8] a, u32[8] b) -> bool {
+    u32 mut equal_until_idx = -1;
+    for u32 i in 0..8 {
+        equal_until_idx = if (a[i] == b[i]) && (equal_until_idx == i-1) { i } else { equal_until_idx }; 
+    }
+    u32 compare_idx = (equal_until_idx+1) % 8;
+    return a[compare_idx] > b[compare_idx];
+}
+
+def is_element<N>(u32[8] e, u32[N][8] list) -> bool {
+    u32 mut L = 0;
+    u32 mut R = N-1;
+    u32 mut found = 0;
+    for u32 i in 0..MAX_DEPTH_D {
+        u32 mut m = (L + R) / 2;
+        found = found + if is_equal(list[m],  e) { 1 } else { 0 };
+        L = if is_smaller(list[m], e) && m != N { m+1 } else { L };
+        R = if is_larger(list[m], e) && m != 0{ m-1 } else { R };
+    }
+    return found >= 1;
+}
+
+def main(public u32[8] h_D, private u32[NO_SAMPLES_D][8] H_D, public u32[8] h_U_prev, private u32[NO_SAMPLES_U_PREV][8] H_U_prev, public u32[8] h_U, private u32[NO_SAMPLES_U_PLUS][8] H_U_plus) {
+
+    // Tie datasets to their commitements
+    {%- for l in h_D_circuit.splitlines() %}
+    {{l}}
+    {%- endfor %}
+
+    {%- for l in h_U_prev_circuit.splitlines() %}
+    {{l}}
+    {%- endfor %}
+
+    // verify that D is sorted
+    for u32 i in 1..NO_SAMPLES_D {
+        assert(is_smaller(H_D[i-1], H_D[i]));
+    }
+
+    // update h_U
+    u32[8] mut h_U_prime = h_U_prev;
+    for u32 i in 0..NO_SAMPLES_U_PLUS {
+        h_U_prime = hash_digest(h_U_prime, H_U_plus[i]);
+    }
+    assert(h_U_prime == h_U);
+
+    // U and D are disjunct
+    // => each element in U_prev is not element in D
+    for u32 i in 0..NO_SAMPLES_U_PREV {
+        bool is_part = is_element(H_U_prev[i], H_D);
+        assert(is_part == false);
+        log("U in D: {} {}", i, is_part);
+    }
+    // => each element in U_plus is not element in D
+    for u32 i in 0..NO_SAMPLES_U_PLUS {
+        bool is_part = is_element(H_U_plus[i], H_D);
+        assert(is_part == false);
+        log("U in D: {} {}", i, is_part);
+    }
+    
+}

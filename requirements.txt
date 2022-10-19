@@ -1,0 +1,8 @@
+bitstring==3.1.5
+jinja2==3.1.2
+matplotlib==3.5.2
+pip-chill==1.0.1
+pmlb==1.0.1.post3
+pydng==1.1.2
+sklearn==0.0
+tqdm==4.64.0
