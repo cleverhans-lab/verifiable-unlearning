@@ -21,7 +21,6 @@ from utils import parse_and_group_arguments, set_seeds, setup_working_dir
 def build_merkle_tree(leafs, var_names=('tree_D', 'H_D', 'h_D'), append_only=False):
     
     if not append_only:
-
         H_leafs_zip = [ (hash_input(leaf), leaf) for leaf in leafs ]
         H_leafs_zip = sorted(H_leafs_zip, key=lambda d: int(binascii.hexlify(d[0]), 16))
         H_leafs, leafs = zip(*H_leafs_zip)
@@ -29,8 +28,6 @@ def build_merkle_tree(leafs, var_names=('tree_D', 'H_D', 'h_D'), append_only=Fal
         tree = []
         node_idx = 0
         for leaf_idx in range(len(leafs)):
-            # h = hash_input(leafs[leaf_idx])
-            # hashes += [ h ]
             tree += [ H_leafs[leaf_idx] ]
             node_idx += 1
 
@@ -67,7 +64,6 @@ def build_merkle_tree(leafs, var_names=('tree_D', 'H_D', 'h_D'), append_only=Fal
                 current_level.append(previous_level[-1])
             verification_proof_src += "\n"
             previous_level = current_level
-        # verification_proof_src += 'log("{}", tree[%d]);\n' % (node_idx-1)
         verification_proof_src += f'assert(is_equal(tree[{node_idx-1}], h_D));'
     
     else:
@@ -81,16 +77,13 @@ def build_merkle_tree(leafs, var_names=('tree_D', 'H_D', 'h_D'), append_only=Fal
 
         verification_proof_src = ""
         verification_proof_src += f'u32[{len(tree)}][8] mut tree = [[0; 8]; {len(tree)}];\n\n'
-        # verification_proof_src += f'u32[{len(leafs)}][8] mut hashes = [[0; 8]; {len(leafs)}];\n\n'
         verification_proof_src += f'tree[0] = hash_int(0);\n'
         node_idx = 1
         for leaf_idx in range(len(leafs)):
             verification_proof_src += f'tree[{node_idx}] = H_D[{leaf_idx}];\n'
-            # verification_proof_src += f'hashes[{leaf_idx}] = tree[{node_idx}];\n'
             node_idx += 1
             verification_proof_src += f'tree[{node_idx}] = hash_digest(tree[{node_idx-2}], tree[{node_idx-1}]);\n'
             node_idx += 1
-        # verification_proof_src += 'log("{}", tree[%d]);\n' % (node_idx-1)
         verification_proof_src += f'assert(is_equal(tree[{node_idx-1}], h_D));'
 
     verification_proof_src = verification_proof_src.replace('tree', var_names[0])
@@ -126,18 +119,11 @@ def main(trials_dir, trial_name, no_samples_D, no_samples_U_prev, no_samples_U_p
     U_prev = [ [ Y[idx] ] + X[idx] for idx in range(no_samples_D, no_samples_D+no_samples_U_prev) ]
     U_plus = [ [ Y[idx] ] + X[idx] for idx in range(no_samples_D+no_samples_U_prev, no_samples_D+no_samples_U_prev+no_samples_U_plus) ]
 
-    # U = random.sample(D, k=3) + random.sample(U, k=3)
-    # random.shuffle(U)
 
     H_D, h_D, h_D_circuit = build_merkle_tree(D, ('tree_D', 'H_D', 'h_D'), append_only=False)
     H_U_prev, h_U_prev, h_U_prev_circuit = build_merkle_tree(U_prev, ('tree_U_prev', 'H_U_prev', 'h_U_prev'), append_only=True)
     _, h_U, _ = build_merkle_tree(U_prev+U_plus, append_only=True)
     H_U_plus = [ hash_input(d) for d in U_plus ]
-
-    # H_D = sorted(H_D, key=lambda d: int(binascii.hexlify(d), 16))
-    # for d in H_D:
-        # print(binascii.hexlify(d))
-    # print()
 
     template = Template(proof_config['proof_template'].read_text())
     proof_zk = template.render(max_depth_D=math.ceil(math.log2(len(D))),

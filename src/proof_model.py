@@ -18,7 +18,6 @@ from dataset import Dataset
 from snarks import *
 from utils import parse_and_group_arguments, set_seeds, setup_working_dir
 
-
 def main(dataset_dir, dataset_name, trials_dir, trial_name, proof_config, train_config):
 
     print("[+] Arguments")
@@ -84,13 +83,10 @@ def main(dataset_dir, dataset_name, trials_dir, trial_name, proof_config, train_
     X = [ [ twos_complement(x_i) for x_i in x ] for x in dataset.X ]
     Y = [ twos_complement(y_i) for y_i in dataset.Y ]
     weights = [ twos_complement(w) for w in model.weights]
-    # print([f'{w}' for w in model.weights], [f'{x:x}' for x in weights])
 
     h_m = hash_int(weights[0])
     for w_i in weights[1:]:
         h_m = hash_hex(h_m+hash_int(w_i))
-    # print(weights, h_m)
-    # exit()
 
     if proof_config['skip_verification']:
         accumulator = b'\x00'*64 
@@ -101,7 +97,6 @@ def main(dataset_dir, dataset_name, trials_dir, trial_name, proof_config, train_
     witness_args = " ".join([
         " ".join([str(int(c, 16)) for c in to_u32(accumulator)]),
         " ".join([str(int(c, 16)) for c in to_u32(h_m)]),
-        # " ".join(map(str, weights)),
         " ".join([ " ".join(map(str, x)) for x in X ]),
         " ".join(map(str, Y)),
     ])
