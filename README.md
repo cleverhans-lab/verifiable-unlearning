@@ -21,7 +21,7 @@ To reproduce the experiments from the paper, we prepared various convenience scr
 docker run --rm -it verifiable-unlearning
 ```
 
-Note: the `--rm` flags automatically deletes the container when stopped (adjust as appropiate).
+Note: the `--rm` flags automatically deletes the container when stopped (adjust as appropriate).
 
 The scripts can be found in directory `evaluation` and run as follows:
 ```
