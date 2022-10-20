@@ -2,7 +2,7 @@
 from pathlib import Path
 import json
 
-TRIALS_DIR = Path("/root/verifiable-unlearningevaluation/trials")
+TRIALS_DIR = Path("/root/verifiable-unlearning/evaluation/trials")
 
 def format_running_time(running_time):
     return f"{running_time // 3600:2.0f}h {(running_time % 3600) // 60:2.0f}m {(running_time % 60):2.0f}s"
