@@ -9,4 +9,4 @@ clear
 /usr/bin/python3 /root/verifiable-unlearning/src/proof_model.py --trial_name models/neural_network_2 --dataset_name synthetic_100 --neural_network_2
 /usr/bin/python3 /root/verifiable-unlearning/src/proof_model.py --trial_name models/neural_network_4 --dataset_name synthetic_100 --neural_network_4
 
-/usr/bin/python3 /root/evaluation/scripts/models.py
+/usr/bin/python3 /root/verifiable-unlearning/evaluation/scripts/models.py

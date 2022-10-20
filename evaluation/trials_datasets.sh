@@ -28,4 +28,4 @@ python3 /root/verifiable-unlearning/src/proof_model.py --trial_name classificati
 python3 /root/verifiable-unlearning/src/proof_model.py --trial_name classification/corral/neural_network_2 --dataset_name corral --neural_network_2
 python3 /root/verifiable-unlearning/src/proof_model.py --trial_name classification/corral/neural_network_4 --dataset_name corral --neural_network_4
 
-/usr/bin/python3 /root/evaluation/scripts/datasets.py
+/usr/bin/python3 /root/verifiable-unlearning/evaluation/scripts/datasets.py

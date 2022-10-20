@@ -16,4 +16,4 @@ clear
 /usr/bin/python3 /root/verifiable-unlearning/src/proof_model.py --trial_name benchmarks/model/100 --dataset_name synthetic_100 --linear_regression
 /usr/bin/python3 /root/verifiable-unlearning/src/proof_model.py --trial_name benchmarks/model/1000 --dataset_name synthetic_1000 --linear_regression
 
-/usr/bin/python3 /root/evaluation/scripts/benchmarks.py
+/usr/bin/python3 /root/verifiable-unlearning/evaluation/scripts/benchmarks.py
