@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 # CONFIG
 #
 
-TRIALS_DIR = Path.home().joinpath('verifiable-unlearning/evalauation/trials/classification')
+TRIALS_DIR = Path.home().joinpath('verifiable-unlearning/evaluation/trials/classification')
 PLOTS_DIR = Path.home().joinpath('verifiable-unlearning/evlautation/plots')
 PLOTS_DIR.mkdir(exist_ok=True, parents=True)
 
