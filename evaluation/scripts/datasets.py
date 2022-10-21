@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 #
 
 TRIALS_DIR = Path.home().joinpath('verifiable-unlearning/evaluation/trials/classification')
-PLOTS_DIR = Path.home().joinpath('verifiable-unlearning/evlautation/plots')
+PLOTS_DIR = Path.home().joinpath('verifiable-unlearning/evaluation/plots')
 PLOTS_DIR.mkdir(exist_ok=True, parents=True)
 
 # setup matplotlib
@@ -80,13 +80,11 @@ axs[0].spines['right'].set_visible(False)
 axs[0].spines['top'].set_visible(False)
 axs[0].set_ylabel("$\Pi.\mathsf{Setup}$", fontsize="large")
 axs[0].set_axisbelow(True)
-axs[0].legend(labels=['Linear Regression', 'Logistic Regression', 'Neural Network ($N=2$)', 'Neural Network ($N=4$)'], 
-              loc="upper right", ncol=2, fontsize="small")
 
 # Y ticks
 step = 1800
 max_running_time = int(3600 * 3.5)
-ticks_setup = [y for y in range(0, max_running_time+step, step)], 
+ticks_setup = [y for y in range(0, max_running_time+step, step)]
 labels_setup =[f'{y // 3600:.0f}h {(y % 3600) // 60:>2}m' for y in range(0, max_running_time+step, step)]
 axs[0].set_yticks(ticks_setup, labels=labels_setup)
 
@@ -147,6 +145,10 @@ for idx, classifier in enumerate(classifier_names):
     ticks = [ x+offsets[idx] for x in range(len(dataset_names)) ]
     axs[0].bar(ticks, X_setup, 0.2, color=colors[colors_map[classifier]]+'E8')
     axs[1].bar(ticks, X_proof, 0.2, color=colors[colors_map[classifier]]+'E8')
+
+# legend
+axs[0].legend(labels=['Linear Regression', 'Logistic Regression', 'Neural Network ($N=2$)', 'Neural Network ($N=4$)'], 
+              loc="upper right", ncol=2, fontsize="small")
 
 # save plot
 fig.tight_layout()
