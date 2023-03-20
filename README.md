@@ -9,7 +9,7 @@ This is the code repository accompaning our paper [Verifiable and Provably Secur
 We implemented our framework based on [CirC](https://github.com/circify/circ/) and [Spartan](https://github.com/microsoft/Spartan). For ease of use, we included a Dockerfile with all necessary tools to reproduce the results from the paper. It can be build via
 
 ```
-git clone https://github.com/verifiable-unlearning/artifacts.git verifiable-unlearning
+git clone https://github.com/cleverhans-lab/verifiable-unlearning verifiable-unlearning
 cd verifiable-unlearning; ./docker.sh build
 ```
 
