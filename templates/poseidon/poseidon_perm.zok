@@ -1,0 +1,55 @@
+from "./poseidon_constants.zok" import POSEIDON_C, POSEIDON_M
+
+def ark<N>(field[N] state, u32 offset) -> field[N]:
+    for u32 i in 0..N do
+        state[i] = state[i] + POSEIDON_C[offset + i]
+    endfor
+    return state
+
+def sbox_f<N>(field[N] state) -> field[N]:
+    for u32 i in 0..N do
+        state[i] = state[i]**5
+    endfor
+    return state
+
+def sbox_p<N>(field[N] state) -> field[N]:
+    state[N-1] = state[N-1]**5
+    return state
+
+def mix<N>(field[N] state) -> field[N]:
+    field[N] out = [0; N]
+    for u32 i in 0..N do
+        field acc = 0
+        for u32 j in 0..N do
+            acc = acc + (state[j] * POSEIDON_M[i][j])
+        endfor
+        out[i] = acc
+    endfor
+    return out
+
+def poseidon_perm(field[6] inp, u32 r_p, u32 r_f_start, u32 r_f_end) -> field[6]:
+    field[6] state = inp
+    u32 round_keys_offset = 0
+
+    for u32 i in 0..r_f_start do
+        state = ark(state, round_keys_offset)
+        state = sbox_f(state)
+        state = mix(state)
+        round_keys_offset = round_keys_offset + 6
+    endfor
+
+    for u32 i in 0..r_p do
+        state = ark(state, round_keys_offset)
+        state = sbox_p(state)
+        state = mix(state)
+        round_keys_offset = round_keys_offset + 6
+    endfor
+
+    for u32 i in 0..r_f_end do
+        state = ark(state, round_keys_offset)
+        state = sbox_f(state)
+        state = mix(state)
+        round_keys_offset = round_keys_offset + 6
+    endfor
+
+    return state

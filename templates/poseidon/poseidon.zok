@@ -1,0 +1,39 @@
+
+// Poseidon hash for ristretto curves
+// - Paper: https://eprint.iacr.org/2019/458.pdf
+// - Implementation adapted from
+//     * https://github.com/Zokrates/ZoKrates/blob/latest/zokrates_stdlib/stdlib/hashes/poseidon/poseidon.zok
+//     * https://github.com/lovesh/bulletproofs-r1cs-gadgets
+
+from "./poseidon_perm.zok" import poseidon_perm
+from "./poseidon_constants.zok" import PADDING_CONST
+
+def poseidon_hash_2(field input_0, field input_1) -> field:
+    u32 r_p = 57
+    u32 r_f_start = 4
+    u32 r_f_end = 4
+
+    field[6] state = [0; 6]
+    state[1] = input_0
+    state[2] = input_1
+    state[3] = PADDING_CONST
+
+    state = poseidon_perm(state, r_p, r_f_start, r_f_end)
+
+    return state[1]
+
+def poseidon_hash_4(field[4] inputs) -> field:
+    u32 r_p = 60
+    u32 r_f_start = 4
+    u32 r_f_end = 4
+
+    field[6] state = [0; 6]
+    state[1] = inputs[0]
+    state[2] = inputs[1]
+    state[3] = inputs[2]
+    state[4] = inputs[3]
+    state[5] = PADDING_CONST
+
+    state = poseidon_perm(state, r_p, r_f_start, r_f_end)
+
+    return state[1]

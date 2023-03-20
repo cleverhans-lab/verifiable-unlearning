@@ -1,0 +1,107 @@
+
+import "utils/casts/u64_to_bits" as u64_to_bits
+import "utils/casts/u64_to_field" as u64_to_field
+from "./poseidon/poseidon" import poseidon_hash_2 as hash
+
+const u32 MAX_SAMPLES_D_PREV = {{max_samples_D_prev}}
+const u32 MAX_SAMPLES_U_PREV = {{max_samples_U_prev}}
+const u32 MAX_SAMPLES_U_PLUS = {{max_samples_U_plus}}
+const u32 MAX_SAMPLES_D = {{max_samples_D_prev}}
+const u64 PRECISION = {{precision}}
+const u32 EPOCHS = {{epochs}}
+const u64 LR = {{lr}}
+const u32 NO_FEATURES = {{no_features}}
+const u32 NO_WEIGHTS = {{no_weights}}
+const u32 NO_NEURONS = {{no_neurons}}
+
+def hash_input(u64[NO_FEATURES] x, u64 y) -> field:
+    field h = hash(u64_to_field(y), u64_to_field(x[0]))
+    for u32 j in 1..NO_FEATURES do
+        h = hash(h, u64_to_field(x[j]))
+    endfor
+    return h
+
+def hash_delta(u64[NO_WEIGHTS] w) -> field:
+    field h = hash(u64_to_field(w[0]), u64_to_field(w[1]))
+    for u32 j in 2..NO_WEIGHTS do
+        h = hash(h, u64_to_field(w[j]))
+    endfor
+    return h
+
+def remove_shift(u64 input) -> u64:
+    return if u64_to_bits(input)[0] == true then  -1* ((-1 * input) / PRECISION ) else input / PRECISION fi
+
+// {%- if logistic_regression or neural_network %}
+// const u64 W0 = {{W0}};
+// const u64 W1 = {{W1}};
+// const u64 W3 = {{W3}};
+// def sigmoid(u64 x) -> u64 {
+//     return W0 + remove_shift(W1*x) - remove_shift(W3*remove_shift(remove_shift(x*x)*x));
+// }
+// {% endif %}
+
+def main(public field h_m_prev, public field h_m, public field h_deltas_prev, public field h_deltas, public field h_D_prev, public field h_D, public field h_U_prev, public field h_U, private u64[NO_WEIGHTS] m_prev, private u64[MAX_SAMPLES_D_PREV][NO_WEIGHTS] deltas_prev, private u32 no_samples_D_prev, private field[MAX_SAMPLES_D_PREV] H_D_prev, private u32 no_samples_U_plus, private u64[MAX_SAMPLES_U_PLUS][NO_FEATURES] U_plus_X, private u64[MAX_SAMPLES_U_PLUS] U_plus_Y, private u32[MAX_SAMPLES_U_PLUS] I) -> field:
+
+    // (1)
+    field[MAX_SAMPLES_U_PLUS] H_U_plus = [0; MAX_SAMPLES_U_PLUS]
+    for u32 i in 0..MAX_SAMPLES_U_PLUS do
+        H_U_plus[i] = if i < no_samples_U_plus then hash_input(U_plus_X[i], U_plus_Y[i]) else 0 fi
+    endfor
+
+    field h_U_prime = h_U_prev
+    for u32 i in 0..MAX_SAMPLES_U_PLUS do
+        h_U_prime = if i < no_samples_U_plus then hash(h_U_prime, H_U_plus[i]) else h_U_prime fi
+    endfor
+    assert(h_U_prime == h_U)
+
+    // (2)
+    field[MAX_SAMPLES_D_PREV] H_deltas_prev = [0; MAX_SAMPLES_D_PREV]
+    for u32 i in 0..MAX_SAMPLES_D_PREV do
+        H_deltas_prev[i] = if i < no_samples_D_prev then hash_delta(deltas_prev[i]) else 0 fi
+    endfor
+
+    field h_deltas_prev_prime = hash(0, 0)
+    for u32 i in 0..MAX_SAMPLES_D_PREV do
+        h_deltas_prev_prime = if i < no_samples_D_prev then hash(h_deltas_prev_prime, H_deltas_prev[i]) else h_deltas_prev_prime fi
+    endfor
+    assert(h_deltas_prev_prime == h_deltas_prev)
+
+    // (3)
+    field[MAX_SAMPLES_D_PREV] H_D = [...H_D_prev]
+
+    for u32 i in 0..MAX_SAMPLES_U_PLUS do
+        field h_prime = hash_input(U_plus_X[i], U_plus_Y[i])
+        field h = if i < no_samples_U_plus then H_D[I[i]] else h_prime fi
+        assert(h == h_prime)
+        H_D[I[i]] = if i < no_samples_U_plus then 0 else H_D[I[i]] fi
+    endfor 
+
+    // (4)
+    field h_deltas_prime = hash(0, 0)
+    field h_D_prev_prime = hash(0, 0)
+    field h_D_prime = hash(0, 0)
+    for u32 i in 0..MAX_SAMPLES_D_PREV do
+        h_D_prev_prime = if i < no_samples_D_prev then hash(h_D_prev_prime, H_D_prev[i]) else h_D_prev_prime fi
+        h_D_prime = if (i < no_samples_D_prev) && (H_D[i] != 0) then hash(h_D_prime, H_D[i]) else h_D_prime fi
+        h_deltas_prime = if (i < no_samples_D_prev) && (H_D[i] != 0) then hash(h_deltas_prime, H_deltas_prev[i]) else h_deltas_prime fi
+    endfor
+    assert(h_D_prime == h_D)
+    assert(h_D_prev_prime == h_D_prev)
+    assert(h_deltas_prime == h_deltas)
+
+    // (5)
+    u64[NO_WEIGHTS] m = [...m_prev]
+    for u32 i in 0..MAX_SAMPLES_U_PLUS do
+        for u32 j in 0..NO_WEIGHTS do
+            m[j] = if i < no_samples_U_plus then m[j] + deltas_prev[I[i]][j] else m[j] fi
+        endfor
+    endfor
+
+    // (6)
+    field h_m_prime = hash(u64_to_field(m[0]), u64_to_field(m[1]))
+    for u32 i in 2..NO_WEIGHTS do
+        h_m_prime = hash(h_m_prime, u64_to_field(m[i]))
+    endfor
+    assert(h_m_prime == h_m)
+
+    return 1

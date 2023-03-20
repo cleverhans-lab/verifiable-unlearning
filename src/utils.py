@@ -29,13 +29,15 @@ def parse_and_group_arguments(parser):
         del args_dict['help']
     return args_dict
 
-def setup_working_dir(trials_dir, trial_name):
+def setup_working_dir(trials_dir, trial_name, overwrite=False):
     working_dir = trials_dir.joinpath(trial_name)
     if working_dir.is_dir():
         print(f'[!] Working dir already exist: {working_dir}')
-        if input("    Enter yes to overwrite: ") == 'yes':
+        if overwrite or input("    Enter yes to overwrite: ") == 'yes':
             print(f'    -> removed dir')
             shutil.rmtree(working_dir)
+        else:
+            exit()
     working_dir.mkdir(parents=True)
     return working_dir
 
@@ -55,3 +57,6 @@ def setup_file_logger(working_dir):
 def set_seeds(seed):
     random.seed(seed)
     np.random.seed(seed)
+
+def format_running_time(running_time):
+    return f"{running_time // 3600:.0f}h {(running_time % 3600) // 60:.0f}m {(running_time % 60):.0f}s"
